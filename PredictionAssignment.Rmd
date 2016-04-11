@@ -1,0 +1,47 @@
+---
+title: "Human Activity Recognition Analysis"
+#author: Maureen Hall
+#date: April 3, 2016
+#output: 
+#  pdf_document
+output: 
+  html_document:
+    keep_md: true
+---
+
+## Overview
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. The goal of this analysis was to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants who were asked to perform barbell lifts correctly and incorrectly in 5 different ways, and predict the manner in which they did the exercise. The data for this analysis came from the following source: http://groupware.les.inf.puc-rio.br/har.
+
+## Exploratory Analysis
+``` {r}
+# load training data
+training = read.csv("./pml-training.csv")
+# view data
+dim(training)
+names(training)
+head(training)
+# create data frame of model variables
+train_data <- training[,grep("^roll|^pitch|^yaw|^total_accel|^gyros|^accel|^magnet|^class",names(training))]
+```
+
+## Modeling Analysis
+As seen from the above output, there are 19,622 observations of 160 variables in the training data, but many of the variable values are blank or NA. However the following 13 measurements were always available for each of the 4 accelerometers on the belt, forearm, arm, and dumbell: roll, pitch, yaw, total_accel, gyros_x, gyros_y, gyros_z, accel_x, accel_y, accel_z, magnet_x, magnet_y, and magnet_z, and therefore these variables will be used to build a random forest model.
+
+A random forest model was selected because it is fast, accurate, does not overfit, and there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error (see http://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm#ooberr). The random forest model uses a random sampling cross validation method.
+
+``` {r}
+# create rf model
+library(caret)
+set.seed(1512)
+modfit <- train(classe~.,data=train_data,method="rf")
+modfit
+modfit$finalModel
+# load testing data
+testing = read.csv("./pml-testing.csv")
+pred <- predict(modfit,testing)
+pred
+```
+
+
+## Summary
+As seen from the above output, the OOB (out of bag) or expected out of sample error rate is very small, so the model should perform predictions extremely well. The predictions for the testing data are also shown above.
